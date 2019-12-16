@@ -1,0 +1,105 @@
+# x와 y 데이터를 각각 2개씩으로 분리
+# 2개의 인풋, 2개의 아웃풋 모델인 ensemble 모델을 구현하시오.
+
+from numpy import array
+from keras.models import Sequential
+from keras.layers import Dense, LSTM
+
+#1. 데이터
+x1 = array([[1,2,3],[2,3,4],[3,4,5],[4,5,6],[5,6,7],
+            [6,7,8],[7,8,9],[8,9,10],[9,10,11]])
+x2 = array([[10,11,12],[20,30,40],[30,40,50],[40,50,60]])
+y1 = array([[4,5,6,7,8,9,10,11,12]])
+y2 = array([[13,50,60,70]])
+
+from sklearn.model_selection import train_test_split
+x1_train, x1_test, y1_train, y1_test = train_test_split(
+    x1,y1, random_state=66, test_size=0.4, shuffle=False
+)
+x1_val, x1_test, y1_val, y1_test = train_test_split(
+    x1_test,y1_test, random_state=66, test_size=0.5, shuffle=False
+)
+
+
+x2_train, x2_test, y2_train, y2_test = train_test_split(
+    x2,y2, random_state=66, test_size=0.4, shuffle=False
+)
+x2_val, x2_test, y2_val, y2_test = train_test_split(
+    x2_test,y2_test, random_state=66, test_size=0.5, shuffle=False
+)
+
+# print(x2_test.shape)
+
+# print(x)
+# print("x.shape :", x.shape)
+# print("y.shape :", y.shape)
+
+# x = x.reshape((x.shape[0], x.shape[1], 1)) 
+
+# print(x)
+# print("x.shape: ", x.shape) #(4, 3, 1)
+
+
+# #2. 모델 구성
+# model = Sequential()
+# model.add(LSTM(70, activation='relu', input_shape=(3,1)))
+# model.add(Dense(60))
+# model.add(Dense(30))
+# model.add(Dense(20))
+# model.add(Dense(12))
+# model.add(Dense(9))
+# model.add(Dense(6))
+# model.add(Dense(5))
+# model.add(Dense(4))
+# model.add(Dense(3))
+# model.add(Dense(1))
+
+from keras.models import Sequential, Model
+from keras.layers import Dense, Input
+
+input1 = Input(shape=(3,))
+dense1 = Dense(10, activation='relu')(input1)
+dense2 = Dense(9)(dense1)
+dense3 = Dense(8)(dense2)
+dense4 = Dense(7)(dense3)
+dense5 = Dense(6)(dense4)
+dense6 = Dense(5)(dense5)
+dense7 = Dense(4)(dense6)
+dense8 = Dense(3)(dense7)
+dense9 = Dense(2)(dense8)
+middle1 = Dense(3)(dense9)
+
+
+input2 = Input(shape=(3,))
+xx = Dense(10, activation='relu')(input1)
+xx = Dense(9)(xx)
+xx = Dense(8)(xx)
+xx = Dense(7)(xx)
+xx = Dense(6)(xx)
+xx = Dense(5)(xx)
+xx = Dense(4)(xx)
+xx = Dense(3)(xx)
+xx = Dense(2)(xx)
+middle2 = Dense(3)(xx)
+
+
+from keras.layers.merge import concatenate
+merge1 = concatenate([middle1, middle2])  #2개 이상의 input이면 리스트로 표현
+
+output1 = Dense(30)(merge1)
+output1 = Dense(13)(output1)
+output1 = Dense(3)(output1)
+
+output2 = Dense(15)(merge1)
+output2 = Dense(32)(output2)
+output2 = Dense(3)(output2)
+
+model = Model(inputs = [input1,input2], outputs=[output1,output2]) 
+#시작은 input1 끝은 output1으로 하겠다는말
+model.summary()
+
+from keras.callbacks import EarlyStopping
+
+early_stopping = EarlyStopping(monitor='val_loss', patience=1000, mode='auto')
+
+model.fit(x1,y1,y2,x2, epochs=100, batch_size=1)
